@@ -1,9 +1,9 @@
 :root {
-	--bg: #0f172a;
-	--card: #111827;
-	--text: #e5e7eb;
-	--muted: #94a3b8;
-	--accent: #22c55e;
+	--bg: #ffffff;
+	--card: #ffffff;
+	--text: #111827;
+	--muted: #6b7280;
+	--accent: #2563eb;
 }
 
 * { box-sizing: border-box; }
@@ -25,12 +25,7 @@ h1 { font-size: 24px; margin: 0; }
 
 #app { margin-top: 16px; }
 
-.card {
-	background: var(--card);
-	border: 1px solid #1f2937;
-	border-radius: 8px;
-	padding: 16px;
-}
+.card { background: var(--card); }
 
 .grid {
 	display: grid;
@@ -41,15 +36,6 @@ h1 { font-size: 24px; margin: 0; }
 .muted { color: var(--muted); }
 .accent { color: var(--accent); }
 
-button {
-	background: #1f2937;
-	color: var(--text);
-	border: 1px solid #2c3643;
-	border-radius: 6px;
-	padding: 8px 12px;
-	cursor: pointer;
-}
-
-button:hover { border-color: var(--accent); }
+button { cursor: pointer; }
 
 
