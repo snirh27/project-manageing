@@ -11,6 +11,37 @@
         <h1>ניהול ודירוג פרויקטים</h1>
     </header>
     <main>
+        <section class="create-section" dir="rtl">
+            <h2>יצירת פרויקט חדש</h2>
+            <button id="openCreate">פתח חלון יצירה</button>
+        </section>
+
+        <!-- Modal: Create Project -->
+        <div id="createModal" class="modal" hidden dir="rtl" aria-hidden="true">
+            <div class="modal-backdrop" data-close></div>
+            <div class="modal-card">
+                <h3>יצירת פרויקט</h3>
+                <form id="modalCreateForm">
+                    <div class="field">
+                        <label for="m_name">שם</label>
+                        <input id="m_name" name="name" required>
+                    </div>
+                    <div class="field">
+                        <label for="m_description">תיאור</label>
+                        <input id="m_description" name="description" required>
+                    </div>
+                    <div class="field">
+                        <label for="m_image">תמונה</label>
+                        <input id="m_image" name="image" type="file" accept="image/*">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="cancelCreate">ביטול</button>
+                        <button type="submit" class="primary">יצירה</button>
+                    </div>
+                    <div class="form-msg" id="modalFormMsg"></div>
+                </form>
+            </div>
+        </div>
         <div id="app"></div>
     </main>
 	<script src="/app.js" defer></script>

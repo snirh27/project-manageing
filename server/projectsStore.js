@@ -81,18 +81,5 @@ export function deleteProject(id) {
 	return true;
 }
 
-// Seed with a couple of demo projects for easier frontend testing
-createProject({
-	name: 'Portfolio Website',
-	description: 'A personal portfolio site with responsive design',
-	imageUrl: 'https://picsum.photos/seed/portfolio/600/400',
-	categoryId: 1
-});
-createProject({
-	name: 'Task Manager',
-	description: 'CRUD app to manage daily tasks',
-	imageUrl: 'https://picsum.photos/seed/tasks/600/400',
-	categoryId: 2
-});
 
 
