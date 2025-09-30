@@ -11,14 +11,12 @@ async function api(path, options = {}) {
 }
 
 async function fileToDataUrlResized(file, { maxWidth = 1200, quality = 0.8 } = {}) {
-    // Read file to Image, then draw to canvas to compress/resize
     const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
-    // Create image element
     const img = await new Promise((resolve, reject) => {
         const i = new Image();
         i.onload = () => resolve(i);
@@ -36,7 +34,7 @@ async function fileToDataUrlResized(file, { maxWidth = 1200, quality = 0.8 } = {
 }
 
 async function fetchProjects(categoryId) {
-	const q = categoryId != null ? `?category=${encodeURIComponent(categoryId)}` : '';
+    const q = categoryId != null ? `?category=${encodeURIComponent(categoryId)}` : '';
 	return api(`/api/projects${q}`);
 }
 
@@ -83,6 +81,48 @@ function createProjectCard(project) {
 	return card;
 }
 
+async function fetchProjectById(id) {
+    return api(`/api/projects/${id}`);
+}
+
+function openDetailsModal(project) {
+    const modal = document.getElementById('detailsModal');
+    const card = document.getElementById('detailsCard');
+    if (!modal || !card) return;
+    card.innerHTML = `
+        <div class="card-image"><img src="${project.imageUrl}" alt="${project.name}"></div>
+        <div class="card-body">
+            <h3 class="card-title">${project.name}</h3>
+            <p>${project.description ?? ''}</p>
+            <p class="muted">קטגוריה: ${project.categoryId}</p>
+            <div class="card-actions">
+                <button id="detailsClose">חזרה</button>
+                <button id="detailsExtra">סמן כמועדף</button>
+            </div>
+        </div>
+    `;
+    modal.hidden = false; modal.setAttribute('aria-hidden', 'false');
+    modal.querySelector('[data-close]')?.addEventListener('click', closeDetailsModal, { once: true });
+    document.getElementById('detailsClose')?.addEventListener('click', closeDetailsModal, { once: true });
+    document.getElementById('detailsExtra')?.addEventListener('click', () => alert('סומן כמועדף (דמו)'));
+}
+
+function closeDetailsModal() {
+    const modal = document.getElementById('detailsModal');
+    if (!modal) return;
+    modal.hidden = true; modal.setAttribute('aria-hidden', 'true');
+}
+
+async function renderDetails(id) {
+    try {
+        const p = await fetchProjectById(id);
+        openDetailsModal(p);
+    } catch (err) {
+        console.error(err);
+        alert('שגיאה בטעינת פרטי הפרויקט');
+    }
+}
+
 async function renderGrid() {
 	const app = document.getElementById('app');
 	app.innerHTML = '';
@@ -91,7 +131,7 @@ async function renderGrid() {
 	grid.className = 'grid';
 	app.appendChild(grid);
 
-	try {
+    try {
 		const projects = await fetchProjects();
         if (!projects.length) return; // show nothing when empty
 		projects.forEach((p) => grid.appendChild(createProjectCard(p)));
@@ -105,7 +145,20 @@ async function renderGrid() {
 	}
 }
 
-document.addEventListener('DOMContentLoaded', renderGrid);
+function navigate() {
+    const hash = location.hash.slice(1);
+    const match = hash.match(/^\/projects\/(\d+)$/);
+    if (match) {
+        const id = match[1];
+        renderDetails(id);
+    } else {
+        renderGrid();
+        closeDetailsModal();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', navigate);
+window.addEventListener('hashchange', navigate);
 
 document.addEventListener('DOMContentLoaded', () => {
     const openBtn = document.getElementById('openCreate');
@@ -137,10 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const imageUrl = await (async () => {
             if (file && file instanceof File && file.size > 0) {
-                // Resize/compress to ensure request size is small enough
                 return fileToDataUrlResized(file, { maxWidth: 1200, quality: 0.8 });
             }
-            // Fallback placeholder
             return 'https://picsum.photos/seed/placeholder/600/400';
         })();
 
@@ -155,12 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Delete handler (event delegation on #app)
     const appRoot = document.getElementById('app');
     appRoot?.addEventListener('click', async (e) => {
         const t = e.target;
         if (!(t instanceof Element)) return;
-        // Edit
         if (t.matches('button[data-action="edit"]')) {
             const id = t.getAttribute('data-id');
             if (!id) return;
@@ -180,10 +229,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
             }
         }
+        // Card click -> details (including image, but not buttons)
+        if (t.closest('.card') && !t.closest('.card-actions')) {
+            const card = t.closest('.card');
+            const idBtn = card.querySelector('button[data-id]');
+            const id = idBtn?.getAttribute('data-id');
+            if (id) location.hash = `#/projects/${id}`;
+        }
     });
 });
 
-// Edit modal logic
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('filterCategory');
+    const applyBtn = document.getElementById('applyFilter');
+    const clearBtn = document.getElementById('clearFilter');
+    applyBtn?.addEventListener('click', async () => {
+        const val = input?.value;
+        const category = val === '' ? null : Number(val);
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        app.appendChild(grid);
+        try {
+            const projects = await fetchProjects(category);
+            if (!projects.length) return;
+            projects.forEach((p) => grid.appendChild(createProjectCard(p)));
+        } catch (err) {
+            console.error(err);
+        }
+    });
+    clearBtn?.addEventListener('click', () => {
+        if (input) input.value = '';
+        location.hash = '#/';
+    });
+});
+
 function openEditModal(id) {
     const modal = document.getElementById('editModal');
     const form = document.getElementById('modalEditForm');
@@ -194,14 +275,13 @@ function openEditModal(id) {
     if (!modal || !form) return;
     msg.textContent = '';
 
-    // Prefill from current card data in DOM
     const card = document.querySelector(`button[data-action="edit"][data-id="${id}"]`)?.closest('.card');
     const title = card?.querySelector('.card-title')?.textContent || '';
     const img = card?.querySelector('img')?.getAttribute('src') || '';
 
     form.querySelector('#e_id').value = id;
     form.querySelector('#e_name').value = title;
-    form.querySelector('#e_description').value = ''; // user can retype; we didn't render desc on card
+    form.querySelector('#e_description').value = '';
     form.querySelector('#e_imageUrl').value = img;
 
     function close() { modal.hidden = true; modal.setAttribute('aria-hidden', 'true'); msg.textContent=''; }
@@ -226,15 +306,12 @@ function openEditModal(id) {
         if (file && file instanceof File && file.size > 0) {
             imageUrl = await fileToDataUrlResized(file, { maxWidth: 1200, quality: 0.8 });
         }
-        // Build partial payload: include only provided fields
         const payload = {};
         if (name) payload.name = name;
         if (description) payload.description = description;
         if (imageUrl) payload.imageUrl = imageUrl;
         if (!payload.imageUrl && (file && file instanceof File && file.size > 0)) {
-            // already handled above; this branch won't execute
         } else if (!payload.imageUrl) {
-            // if user left both empty, use a random placeholder
             payload.imageUrl = `https://picsum.photos/seed/${Date.now()}/600/400`;
         }
         if (!name) { msg.textContent = 'אנא הזן/י שם'; return; }

@@ -16,6 +16,13 @@
             <button id="openCreate">פתח חלון יצירה</button>
         </section>
 
+        <section class="filter-section" dir="rtl">
+            <label for="filterCategory">סינון לפי קטגוריה (מספר)</label>
+            <input id="filterCategory" type="number" min="0" step="1" placeholder="לדוגמה: 1">
+            <button id="applyFilter">סינון</button>
+            <button id="clearFilter">איפוס</button>
+        </section>
+
         <!-- Modal: Create Project -->
         <div id="createModal" class="modal" hidden dir="rtl" aria-hidden="true">
             <div class="modal-backdrop" data-close></div>
@@ -72,6 +79,14 @@
                     </div>
                     <div class="form-msg" id="modalEditMsg"></div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal: Details Project -->
+        <div id="detailsModal" class="modal" hidden dir="rtl" aria-hidden="true">
+            <div class="modal-backdrop" data-close></div>
+            <div class="modal-card" id="detailsCard">
+                <!-- Filled dynamically -->
             </div>
         </div>
         <div id="app"></div>
