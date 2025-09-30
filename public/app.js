@@ -64,6 +64,11 @@ async function updateProjectApi(id, payload) {
     });
 }
 
+function createStars(rating) {
+    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    return `<span class="stars">${stars}</span>`;
+}
+
 function createProjectCard(project) {
 	const card = document.createElement('div');
 	card.className = 'card';
@@ -76,6 +81,7 @@ function createProjectCard(project) {
 			<h3 class="card-title">${project.name}</h3>
             <p>${project.description ?? ''}</p>
             <p class="muted">קטגוריה: ${project.categoryId}</p>
+            <div class="rating">דירוג: ${createStars(project.rating || 1)}</div>
 			<div class="card-actions">
 				<button data-action="edit" data-id="${project.id}">עריכה</button>
 				<button data-action="delete" data-id="${project.id}">מחיקה</button>
@@ -93,29 +99,92 @@ function openDetailsModal(project) {
     const modal = document.getElementById('detailsModal');
     const card = document.getElementById('detailsCard');
     if (!modal || !card) return;
+    
+    // Store project data on the modal for later use
+    modal.dataset.projectId = project.id;
+    
     card.innerHTML = `
         <div class="card-image"><img src="${project.imageUrl}" alt="${project.name}"></div>
         <div class="card-body">
             <h3 class="card-title">${project.name}</h3>
             <p>${project.description ?? ''}</p>
             <p class="muted">קטגוריה: ${project.categoryId}</p>
+            <div class="rating">דירוג: ${createStars(project.rating || 1)}</div>
+            <div class="rating-control">
+                <label>דרג פרויקט:</label>
+                <select id="ratingSelect">
+                    <option value="1" ${project.rating === 1 ? 'selected' : ''}>1 כוכב</option>
+                    <option value="2" ${project.rating === 2 ? 'selected' : ''}>2 כוכבים</option>
+                    <option value="3" ${project.rating === 3 ? 'selected' : ''}>3 כוכבים</option>
+                    <option value="4" ${project.rating === 4 ? 'selected' : ''}>4 כוכבים</option>
+                    <option value="5" ${project.rating === 5 ? 'selected' : ''}>5 כוכבים</option>
+                </select>
+                <button id="updateRating">עדכן דירוג</button>
+            </div>
             <div class="card-actions">
                 <button id="detailsClose">חזרה</button>
-                <button id="detailsExtra">סמן כמועדף</button>
             </div>
         </div>
     `;
     modal.hidden = false; modal.setAttribute('aria-hidden', 'false');
-    modal.querySelector('[data-close]')?.addEventListener('click', closeDetailsModal, { once: true });
-    document.getElementById('detailsClose')?.addEventListener('click', closeDetailsModal, { once: true });
-    document.getElementById('detailsExtra')?.addEventListener('click', () => alert('סומן כמועדף (דמו)'));
 }
 
 function closeDetailsModal() {
     const modal = document.getElementById('detailsModal');
     if (!modal) return;
     modal.hidden = true; modal.setAttribute('aria-hidden', 'true');
+    // Ensure routing state resets to grid so future opens work
+    if (location.hash.startsWith('#/projects/')) {
+        location.hash = '#/';
+    }
 }
+
+// Add keyboard escape handler
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('detailsModal');
+        if (modal && !modal.hidden) {
+            closeDetailsModal();
+        }
+    }
+});
+
+// Add specific event handler for details modal
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('detailsModal');
+    if (!modal || modal.hidden) return;
+    
+    // Close on backdrop click
+    if (e.target.matches('[data-close]')) {
+        closeDetailsModal();
+        return;
+    }
+    
+    // Close on close button click
+    if (e.target.matches('#detailsClose')) {
+        closeDetailsModal();
+        return;
+    }
+    
+    // Handle rating update
+    if (e.target.matches('#updateRating')) {
+        const projectId = modal.dataset.projectId;
+        if (!projectId) return;
+        const rating = Number(document.getElementById('ratingSelect')?.value);
+        if (!rating) return;
+        
+        updateProjectApi(projectId, { rating })
+            .then(() => {
+                closeDetailsModal();
+                return renderGrid();
+            })
+            .catch(err => {
+                alert('שגיאה בעדכון הדירוג');
+                console.error(err);
+            });
+        return;
+    }
+});
 
 async function renderDetails(id) {
     try {
@@ -156,6 +225,7 @@ function navigate() {
         const id = match[1];
         renderDetails(id);
     } else {
+        // Always render grid when not on a project details page
         const filterSelect = document.getElementById('filterCategory');
         const current = filterSelect?.value || null;
         renderGrid(current || null);
@@ -240,11 +310,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
             }
         }
-        if (t.closest('.card') && !t.closest('.card-actions')) {
+        // Details modal events
+        if (t.matches('#detailsClose')) {
+            closeDetailsModal();
+            return;
+        }
+        if (t.matches('[data-close]')) {
+            closeDetailsModal();
+            return;
+        }
+        if (t.matches('#updateRating')) {
+            const modal = document.getElementById('detailsModal');
+            const projectId = modal?.dataset.projectId;
+            if (!projectId) return;
+            const rating = Number(document.getElementById('ratingSelect')?.value);
+            if (!rating) return;
+            try {
+                await updateProjectApi(projectId, { rating });
+                closeDetailsModal();
+                await renderGrid();
+            } catch (err) {
+                alert('שגיאה בעדכון הדירוג');
+                console.error(err);
+            }
+            return;
+        }
+        // Card click -> details (but not on buttons or rating controls)
+        if (t.closest('.card') && !t.closest('.card-actions') && !t.closest('.rating-control')) {
             const card = t.closest('.card');
             const idBtn = card.querySelector('button[data-id]');
             const id = idBtn?.getAttribute('data-id');
-            if (id) location.hash = `#/projects/${id}`;
+            if (id) {
+                const newHash = `#/projects/${id}`;
+                // If already on same hash, manually render details (hashchange won't fire)
+                if (location.hash === newHash) {
+                    await renderDetails(id);
+                } else {
+                    location.hash = newHash;
+                }
+                return;
+            }
         }
     });
 });

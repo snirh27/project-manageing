@@ -88,6 +88,33 @@ input, select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px
 	flex-wrap: wrap;
 }
 
+.rating {
+	margin: 8px 0;
+	font-size: 14px;
+}
+
+.stars {
+	color: #fbbf24;
+	font-size: 16px;
+}
+
+.rating-control {
+	margin: 12px 0;
+	padding: 8px;
+	background: #f9fafb;
+	border-radius: 6px;
+}
+
+.rating-control label {
+	display: block;
+	margin-bottom: 4px;
+	font-weight: 500;
+}
+
+.rating-control select {
+	margin-left: 8px;
+}
+
 .grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

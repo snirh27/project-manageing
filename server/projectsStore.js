@@ -1,7 +1,7 @@
 // Simple in-memory projects store with basic validation
 
 let nextId = 1;
-/** @type {Array<{id:number,name:string,description:string,imageUrl:string,categoryId:string}>} */
+/** @type {Array<{id:number,name:string,description:string,imageUrl:string,categoryId:string,rating:number}>} */
 const projects = [];
 
 // Hebrew categories
@@ -37,6 +37,9 @@ export function validateProjectInput(input, { partial = false } = {}) {
 	checkField('description', isNonEmptyString, 'Must be a non-empty string');
 	checkField('imageUrl', (v) => isNonEmptyString(v) && isValidUrl(v), 'Must be a valid URL');
 	checkField('categoryId', (v) => CATEGORIES.includes(v), 'Must be a valid category');
+	if (input.rating !== undefined) {
+		checkField('rating', (v) => Number.isInteger(v) && v >= 1 && v <= 5, 'Must be between 1 and 5');
+	}
 
 	return { valid: Object.keys(errors).length === 0, errors };
 }
@@ -51,13 +54,14 @@ export function getProject(id) {
 	return projects.find((p) => p.id === pid) || null;
 }
 
-export function createProject({ name, description, imageUrl, categoryId }) {
+export function createProject({ name, description, imageUrl, categoryId, rating = 1 }) {
 	const project = {
 		id: nextId++,
 		name: name.trim(),
 		description: description.trim(),
 		imageUrl: imageUrl.trim(),
-		categoryId: String(categoryId)
+		categoryId: String(categoryId),
+		rating: Number(rating) || 1
 	};
 	projects.push(project);
 	return project;
@@ -73,6 +77,7 @@ export function updateProject(id, updates) {
 	if (updates.description !== undefined) next.description = String(updates.description).trim();
 	if (updates.imageUrl !== undefined) next.imageUrl = String(updates.imageUrl).trim();
 	if (updates.categoryId !== undefined) next.categoryId = String(updates.categoryId);
+	if (updates.rating !== undefined) next.rating = Number(updates.rating);
 	projects[idx] = next;
 	return next;
 }
