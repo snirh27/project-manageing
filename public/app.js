@@ -22,6 +22,14 @@ async function createProjectApi(payload) {
 	});
 }
 
+async function deleteProjectApi(id) {
+    const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+}
+
 function createProjectCard(project) {
 	const card = document.createElement('div');
 	card.className = 'card';
@@ -52,14 +60,7 @@ async function renderGrid() {
 
 	try {
 		const projects = await fetchProjects();
-		if (!projects.length) {
-			const empty = document.createElement('div');
-			empty.className = 'card';
-			empty.dir = 'rtl';
-			empty.textContent = 'אין פרויקטים עדיין';
-			app.appendChild(empty);
-			return;
-		}
+        if (!projects.length) return; // show nothing when empty
 		projects.forEach((p) => grid.appendChild(createProjectCard(p)));
 	} catch (err) {
 		const errorBox = document.createElement('div');
@@ -124,6 +125,26 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             msg.textContent = 'שגיאה ביצירה';
             console.error(err);
+        }
+    });
+
+    // Delete handler (event delegation on #app)
+    const appRoot = document.getElementById('app');
+    appRoot?.addEventListener('click', async (e) => {
+        const t = e.target;
+        if (!(t instanceof Element)) return;
+        if (t.matches('button[data-action="delete"]')) {
+            const id = t.getAttribute('data-id');
+            if (!id) return;
+            const ok = confirm('האם למחוק את הפרויקט?');
+            if (!ok) return;
+            try {
+                await deleteProjectApi(id);
+                await renderGrid();
+            } catch (err) {
+                alert('שגיאה במחיקה');
+                console.error(err);
+            }
         }
     });
 });
