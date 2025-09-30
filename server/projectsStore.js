@@ -1,0 +1,98 @@
+// Simple in-memory projects store with basic validation
+
+let nextId = 1;
+/** @type {Array<{id:number,name:string,description:string,imageUrl:string,categoryId:number}>} */
+const projects = [];
+
+function isNonEmptyString(value) {
+	return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isValidUrl(value) {
+	try {
+		new URL(value);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+export function validateProjectInput(input, { partial = false } = {}) {
+	const errors = {};
+	const checkField = (key, predicate, message) => {
+		if (!(key in input)) {
+			if (!partial) errors[key] = 'Required';
+			return;
+		}
+		if (!predicate(input[key])) errors[key] = message;
+	};
+
+	checkField('name', isNonEmptyString, 'Must be a non-empty string');
+	checkField('description', isNonEmptyString, 'Must be a non-empty string');
+	checkField('imageUrl', (v) => isNonEmptyString(v) && isValidUrl(v), 'Must be a valid URL');
+	checkField('categoryId', (v) => Number.isInteger(v) && v >= 0, 'Must be a non-negative integer');
+
+	return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function listProjects({ categoryId } = {}) {
+	if (categoryId === undefined) return [...projects];
+	const cid = Number(categoryId);
+	if (Number.isNaN(cid)) return [...projects];
+	return projects.filter((p) => p.categoryId === cid);
+}
+
+export function getProject(id) {
+	const pid = Number(id);
+	return projects.find((p) => p.id === pid) || null;
+}
+
+export function createProject({ name, description, imageUrl, categoryId }) {
+	const project = {
+		id: nextId++,
+		name: name.trim(),
+		description: description.trim(),
+		imageUrl: imageUrl.trim(),
+		categoryId: Number(categoryId)
+	};
+	projects.push(project);
+	return project;
+}
+
+export function updateProject(id, updates) {
+	const pid = Number(id);
+	const idx = projects.findIndex((p) => p.id === pid);
+	if (idx === -1) return null;
+	const current = projects[idx];
+	const next = { ...current };
+	if (updates.name !== undefined) next.name = String(updates.name).trim();
+	if (updates.description !== undefined) next.description = String(updates.description).trim();
+	if (updates.imageUrl !== undefined) next.imageUrl = String(updates.imageUrl).trim();
+	if (updates.categoryId !== undefined) next.categoryId = Number(updates.categoryId);
+	projects[idx] = next;
+	return next;
+}
+
+export function deleteProject(id) {
+	const pid = Number(id);
+	const idx = projects.findIndex((p) => p.id === pid);
+	if (idx === -1) return false;
+	projects.splice(idx, 1);
+	return true;
+}
+
+// Seed with a couple of demo projects for easier frontend testing
+createProject({
+	name: 'Portfolio Website',
+	description: 'A personal portfolio site with responsive design',
+	imageUrl: 'https://picsum.photos/seed/portfolio/600/400',
+	categoryId: 1
+});
+createProject({
+	name: 'Task Manager',
+	description: 'CRUD app to manage daily tasks',
+	imageUrl: 'https://picsum.photos/seed/tasks/600/400',
+	categoryId: 2
+});
+
+
