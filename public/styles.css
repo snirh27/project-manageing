@@ -46,7 +46,7 @@ h1 { font-size: 24px; margin: 0; }
 
 label { color: #374151; }
 
-input { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+input, select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
 
 .form-msg { margin-inline-start: 12px; font-size: 14px; }
 

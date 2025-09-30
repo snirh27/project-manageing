@@ -1,8 +1,11 @@
 // Simple in-memory projects store with basic validation
 
 let nextId = 1;
-/** @type {Array<{id:number,name:string,description:string,imageUrl:string,categoryId:number}>} */
+/** @type {Array<{id:number,name:string,description:string,imageUrl:string,categoryId:string}>} */
 const projects = [];
+
+// Hebrew categories
+const CATEGORIES = ['מזון', 'אורח חיים', 'מחשבים', 'ספורט', 'אחר'];
 
 function isNonEmptyString(value) {
 	return typeof value === 'string' && value.trim().length > 0;
@@ -33,16 +36,14 @@ export function validateProjectInput(input, { partial = false } = {}) {
 	checkField('name', isNonEmptyString, 'Must be a non-empty string');
 	checkField('description', isNonEmptyString, 'Must be a non-empty string');
 	checkField('imageUrl', (v) => isNonEmptyString(v) && isValidUrl(v), 'Must be a valid URL');
-	checkField('categoryId', (v) => Number.isInteger(v) && v >= 0, 'Must be a non-negative integer');
+	checkField('categoryId', (v) => CATEGORIES.includes(v), 'Must be a valid category');
 
 	return { valid: Object.keys(errors).length === 0, errors };
 }
 
 export function listProjects({ categoryId } = {}) {
 	if (categoryId === undefined) return [...projects];
-	const cid = Number(categoryId);
-	if (Number.isNaN(cid)) return [...projects];
-	return projects.filter((p) => p.categoryId === cid);
+	return projects.filter((p) => p.categoryId === categoryId);
 }
 
 export function getProject(id) {
@@ -56,7 +57,7 @@ export function createProject({ name, description, imageUrl, categoryId }) {
 		name: name.trim(),
 		description: description.trim(),
 		imageUrl: imageUrl.trim(),
-		categoryId: Number(categoryId)
+		categoryId: String(categoryId)
 	};
 	projects.push(project);
 	return project;
@@ -71,7 +72,7 @@ export function updateProject(id, updates) {
 	if (updates.name !== undefined) next.name = String(updates.name).trim();
 	if (updates.description !== undefined) next.description = String(updates.description).trim();
 	if (updates.imageUrl !== undefined) next.imageUrl = String(updates.imageUrl).trim();
-	if (updates.categoryId !== undefined) next.categoryId = Number(updates.categoryId);
+	if (updates.categoryId !== undefined) next.categoryId = String(updates.categoryId);
 	projects[idx] = next;
 	return next;
 }
@@ -83,6 +84,8 @@ export function deleteProject(id) {
 	projects.splice(idx, 1);
 	return true;
 }
+
+export { CATEGORIES };
 
 
 

@@ -9,7 +9,8 @@ import {
 	createProject,
 	updateProject,
 	deleteProject,
-	validateProjectInput
+	validateProjectInput,
+	CATEGORIES
 } from './projectsStore.js';
 
 // Resolve __dirname for ES modules
@@ -39,6 +40,11 @@ app.get('/api/projects', (req, res) => {
 	const { category } = req.query;
 	const items = listProjects({ categoryId: category });
 	res.json(items);
+});
+
+// Categories endpoint
+app.get('/api/categories', (req, res) => {
+	res.json(CATEGORIES);
 });
 
 app.get('/api/projects/:id', (req, res) => {

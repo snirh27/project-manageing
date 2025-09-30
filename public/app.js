@@ -38,6 +38,10 @@ async function fetchProjects(categoryId) {
 	return api(`/api/projects${q}`);
 }
 
+async function fetchCategories() {
+    return api('/api/categories');
+}
+
 async function createProjectApi(payload) {
 	return api('/api/projects', {
 		method: 'POST',
@@ -123,7 +127,7 @@ async function renderDetails(id) {
     }
 }
 
-async function renderGrid() {
+async function renderGrid(category = null) {
 	const app = document.getElementById('app');
 	app.innerHTML = '';
 
@@ -132,7 +136,7 @@ async function renderGrid() {
 	app.appendChild(grid);
 
     try {
-		const projects = await fetchProjects();
+		const projects = await fetchProjects(category);
         if (!projects.length) return; // show nothing when empty
 		projects.forEach((p) => grid.appendChild(createProjectCard(p)));
 	} catch (err) {
@@ -152,7 +156,9 @@ function navigate() {
         const id = match[1];
         renderDetails(id);
     } else {
-        renderGrid();
+        const filterSelect = document.getElementById('filterCategory');
+        const current = filterSelect?.value || null;
+        renderGrid(current || null);
         closeDetailsModal();
     }
 }
@@ -195,7 +201,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return 'https://picsum.photos/seed/placeholder/600/400';
         })();
 
-        const payload = { name, description, imageUrl, categoryId: 0 };
+        const categoryId = String(fd.get('category') || '').trim();
+        if (!categoryId) {
+            msg.textContent = 'אנא בחר/י קטגוריה';
+            return;
+        }
+        const payload = { name, description, imageUrl, categoryId };
         try {
             await createProjectApi(payload);
             closeModal();
@@ -229,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
             }
         }
-        // Card click -> details (including image, but not buttons)
         if (t.closest('.card') && !t.closest('.card-actions')) {
             const card = t.closest('.card');
             const idBtn = card.querySelector('button[data-id]');
@@ -241,28 +251,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('filterCategory');
-    const applyBtn = document.getElementById('applyFilter');
-    const clearBtn = document.getElementById('clearFilter');
-    applyBtn?.addEventListener('click', async () => {
+    input?.addEventListener('change', async () => {
         const val = input?.value;
-        const category = val === '' ? null : Number(val);
-        const app = document.getElementById('app');
-        app.innerHTML = '';
-        const grid = document.createElement('div');
-        grid.className = 'grid';
-        app.appendChild(grid);
-        try {
-            const projects = await fetchProjects(category);
-            if (!projects.length) return;
-            projects.forEach((p) => grid.appendChild(createProjectCard(p)));
-        } catch (err) {
-            console.error(err);
-        }
+        const category = val === '' ? null : val;
+        await renderGrid(category);
     });
-    clearBtn?.addEventListener('click', () => {
-        if (input) input.value = '';
-        location.hash = '#/';
-    });
+});
+
+// Load categories and populate dropdowns
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const categories = await fetchCategories();
+        const filterSelect = document.getElementById('filterCategory');
+        const createSelect = document.getElementById('m_category');
+        const editSelect = document.getElementById('e_category');
+        
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            filterSelect?.appendChild(option.cloneNode(true));
+            createSelect?.appendChild(option.cloneNode(true));
+            editSelect?.appendChild(option.cloneNode(true));
+        });
+    } catch (err) {
+        console.error('Failed to load categories:', err);
+    }
 });
 
 function openEditModal(id) {
@@ -283,6 +297,8 @@ function openEditModal(id) {
     form.querySelector('#e_name').value = title;
     form.querySelector('#e_description').value = '';
     form.querySelector('#e_imageUrl').value = img;
+    const categoryText = card?.querySelector('.muted')?.textContent?.replace('קטגוריה: ', '') || '';
+    form.querySelector('#e_category').value = categoryText;
 
     function close() { modal.hidden = true; modal.setAttribute('aria-hidden', 'true'); msg.textContent=''; }
     function open() { modal.hidden = false; modal.setAttribute('aria-hidden', 'false'); }
@@ -300,6 +316,7 @@ function openEditModal(id) {
         const pid = fd.get('id');
         const name = String(fd.get('name') || '').trim();
         const description = String(fd.get('description') || '').trim();
+        const categoryId = String(fd.get('category') || '').trim();
         let imageUrl = String(fd.get('imageUrl') || '').trim();
 
         const file = fd.get('image');
@@ -309,6 +326,7 @@ function openEditModal(id) {
         const payload = {};
         if (name) payload.name = name;
         if (description) payload.description = description;
+        if (categoryId) payload.categoryId = categoryId;
         if (imageUrl) payload.imageUrl = imageUrl;
         if (!payload.imageUrl && (file && file instanceof File && file.size > 0)) {
         } else if (!payload.imageUrl) {

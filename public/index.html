@@ -17,10 +17,10 @@
         </section>
 
         <section class="filter-section" dir="rtl">
-            <label for="filterCategory">סינון לפי קטגוריה (מספר)</label>
-            <input id="filterCategory" type="number" min="0" step="1" placeholder="לדוגמה: 1">
-            <button id="applyFilter">סינון</button>
-            <button id="clearFilter">איפוס</button>
+            <label for="filterCategory">סינון לפי קטגוריה</label>
+            <select id="filterCategory">
+                <option value="">כל הקטגוריות</option>
+            </select>
         </section>
 
         <!-- Modal: Create Project -->
@@ -40,6 +40,12 @@
                     <div class="field">
                         <label for="m_image">תמונה</label>
                         <input id="m_image" name="image" type="file" accept="image/*">
+                    </div>
+                    <div class="field">
+                        <label for="m_category">קטגוריה</label>
+                        <select id="m_category" name="category" required>
+                            <option value="">בחר קטגוריה</option>
+                        </select>
                     </div>
                     <div class="modal-actions">
                         <button type="button" id="cancelCreate">ביטול</button>
@@ -72,6 +78,12 @@
                     <div class="field">
                         <label for="e_image">תמונה חדשה</label>
                         <input id="e_image" name="image" type="file" accept="image/*">
+                    </div>
+                    <div class="field">
+                        <label for="e_category">קטגוריה</label>
+                        <select id="e_category" name="category">
+                            <option value="">בחר קטגוריה</option>
+                        </select>
                     </div>
                     <div class="modal-actions">
                         <button type="button" id="cancelEdit">ביטול</button>
