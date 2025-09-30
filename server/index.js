@@ -21,7 +21,8 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Increase JSON body limit to support very large data URLs for images
+app.use(express.json({ limit: '100mb' }));
 app.use(morgan('dev'));
 
 // Static frontend

@@ -42,6 +42,38 @@
                 </form>
             </div>
         </div>
+
+        <!-- Modal: Edit Project -->
+        <div id="editModal" class="modal" hidden dir="rtl" aria-hidden="true">
+            <div class="modal-backdrop" data-close></div>
+            <div class="modal-card">
+                <h3>עריכת פרויקט</h3>
+                <form id="modalEditForm">
+                    <input type="hidden" id="e_id" name="id">
+                    <div class="field">
+                        <label for="e_name">שם</label>
+                        <input id="e_name" name="name" required>
+                    </div>
+                    <div class="field">
+                        <label for="e_description">תיאור</label>
+                        <input id="e_description" name="description" required>
+                    </div>
+                    <div class="field">
+                        <label for="e_imageUrl">קישור לתמונה</label>
+                        <input id="e_imageUrl" name="imageUrl">
+                    </div>
+                    <div class="field">
+                        <label for="e_image">תמונה חדשה</label>
+                        <input id="e_image" name="image" type="file" accept="image/*">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="cancelEdit">ביטול</button>
+                        <button type="submit" class="primary">שמירה</button>
+                    </div>
+                    <div class="form-msg" id="modalEditMsg"></div>
+                </form>
+            </div>
+        </div>
         <div id="app"></div>
     </main>
 	<script src="/app.js" defer></script>

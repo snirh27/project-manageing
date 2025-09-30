@@ -9,9 +9,12 @@ function isNonEmptyString(value) {
 }
 
 function isValidUrl(value) {
+	if (!isNonEmptyString(value)) return false;
+	// Allow data URL images from client-side uploads
+	if (value.startsWith('data:image/')) return true;
 	try {
-		new URL(value);
-		return true;
+		const u = new URL(value);
+		return u.protocol === 'http:' || u.protocol === 'https:';
 	} catch {
 		return false;
 	}
