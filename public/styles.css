@@ -146,4 +146,33 @@ button { cursor: pointer; }
 	color: transparent;
 }
 
+/* Tooltip styles */
+.card {
+	position: relative;
+	cursor: pointer;
+}
+
+.card-tooltip {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: rgba(0, 0, 0, 0.8);
+	color: white;
+	padding: 8px 12px;
+	border-radius: 6px;
+	font-size: 14px;
+	white-space: nowrap;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.3s ease, visibility 0.3s ease;
+	pointer-events: none;
+	z-index: 10;
+}
+
+.card:hover .card-tooltip {
+	opacity: 1;
+	visibility: visible;
+}
+
 

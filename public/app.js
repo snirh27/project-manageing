@@ -87,6 +87,7 @@ function createProjectCard(project) {
 				<button data-action="delete" data-id="${project.id}">מחיקה</button>
 			</div>
 		</div>
+		<div class="card-tooltip">לפתיחה לחץ כאן</div>
 	`;
 	return card;
 }
