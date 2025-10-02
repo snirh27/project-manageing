@@ -206,8 +206,29 @@ async function renderGrid(category = null) {
 	app.appendChild(grid);
 
     try {
-		const projects = await fetchProjects(category);
-        if (!projects.length) return; // show nothing when empty
+		let projects = await fetchProjects(category);
+		// Apply client-side search and sort
+		const searchInput = document.getElementById('filterSearch');
+		const sortSelect = document.getElementById('sortOrder');
+		const query = String(searchInput?.value || '').trim().toLowerCase();
+		if (query) {
+			projects = projects.filter(p =>
+				String(p.name || '').toLowerCase().includes(query) ||
+				String(p.description || '').toLowerCase().includes(query)
+			);
+		}
+		const sort = sortSelect?.value || 'rating-desc';
+		projects.sort((a, b) => {
+			if (sort === 'name-asc') {
+				return String(a.name).localeCompare(String(b.name), 'he');
+			}
+			if (sort === 'newest') {
+				return Number(b.id) - Number(a.id);
+			}
+			// default: rating-desc
+			return Number(b.rating || 0) - Number(a.rating || 0);
+		});
+		if (!projects.length) return; // show nothing when empty
 		projects.forEach((p) => grid.appendChild(createProjectCard(p)));
 	} catch (err) {
 		const errorBox = document.createElement('div');
@@ -356,12 +377,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('filterCategory');
-    input?.addEventListener('change', async () => {
-        const val = input?.value;
-        const category = val === '' ? null : val;
-        await renderGrid(category);
-    });
+	const input = document.getElementById('filterCategory');
+	const search = document.getElementById('filterSearch');
+	const sort = document.getElementById('sortOrder');
+	const trigger = async () => {
+		const val = input?.value;
+		const category = val === '' ? null : val;
+		await renderGrid(category);
+	};
+	input?.addEventListener('change', trigger);
+	search?.addEventListener('input', trigger);
+	sort?.addEventListener('change', trigger);
 });
 
 // Load categories and populate dropdowns
