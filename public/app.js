@@ -430,7 +430,9 @@ function openEditModal(id) {
 
     form.querySelector('#e_id').value = id;
     form.querySelector('#e_name').value = title;
-    form.querySelector('#e_description').value = '';
+	// Prefill description from the card to avoid clearing it on edit
+	const descriptionText = card?.querySelector('.card-body p:not(.muted):not(.project-id)')?.textContent || '';
+	form.querySelector('#e_description').value = descriptionText;
     form.querySelector('#e_imageUrl').value = img;
     const categoryText = card?.querySelector('.muted')?.textContent?.replace('קטגוריה: ', '') || '';
     form.querySelector('#e_category').value = categoryText;
