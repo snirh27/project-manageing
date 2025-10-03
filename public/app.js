@@ -79,6 +79,7 @@ function createProjectCard(project) {
 		</div>
 		<div class="card-body">
 			<h3 class="card-title">${project.name}</h3>
+            <p class="project-id">מספר פרויקט: ${project.id}</p>
             <p>${project.description ?? ''}</p>
             <p class="muted">קטגוריה: ${project.categoryId}</p>
             <div class="rating">דירוג: ${createStars(project.rating || 1)}</div>
@@ -108,6 +109,7 @@ function openDetailsModal(project) {
         <div class="card-image"><img src="${project.imageUrl}" alt="${project.name}"></div>
         <div class="card-body">
             <h3 class="card-title">${project.name}</h3>
+            <p class="project-id">מספר פרויקט: ${project.id}</p>
             <p>${project.description ?? ''}</p>
             <p class="muted">קטגוריה: ${project.categoryId}</p>
             <div class="rating">דירוג: ${createStars(project.rating || 1)}</div>
@@ -214,7 +216,8 @@ async function renderGrid(category = null) {
 		if (query) {
 			projects = projects.filter(p =>
 				String(p.name || '').toLowerCase().includes(query) ||
-				String(p.description || '').toLowerCase().includes(query)
+				String(p.description || '').toLowerCase().includes(query) ||
+				String(p.id || '').toLowerCase().includes(query)
 			);
 		}
 		const sort = sortSelect?.value || 'rating-desc';

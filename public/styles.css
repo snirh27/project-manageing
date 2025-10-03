@@ -124,6 +124,13 @@ input, select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px
 .muted { color: var(--muted); }
 .accent { color: var(--accent); }
 
+.project-id {
+	font-weight: 600;
+	color: var(--accent);
+	font-size: 14px;
+	margin: 4px 0;
+}
+
 button { cursor: pointer; }
 
 .page-header {
